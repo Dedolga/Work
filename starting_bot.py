@@ -1,4 +1,4 @@
-from main import *
+from mains import *
 import json
 
 
@@ -39,3 +39,4 @@ for event in longpoll.listen():
 
         else:
             write_msg(event.user_id, 'Попробуйте ввести сообщение еще раз')
+

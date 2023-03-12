@@ -1,6 +1,6 @@
 import psycopg2
 
-conn = psycopg2.connect(database='data_bd', user='postgres', password='')
+conn = psycopg2.connect(database='data_bd', user='postgres', password='90Olgabase23')
 
 
 def create_table_userdata():
