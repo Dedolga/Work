@@ -1,7 +1,7 @@
 import psycopg2
 from mains import *
 
-conn = psycopg2.connect(database='data_bd', user='postgres', password='90Olgabase23')
+conn = psycopg2.connect(database='', user='postgres', password='')
 conn.autocommit = True
 
 def create_table_userdata():
