@@ -1,5 +1,7 @@
 from mains import *
+from d_b import *
 import json
+
 
 
 def create_button(text, color):
@@ -39,4 +41,3 @@ for event in longpoll.listen():
 
         else:
             write_msg(event.user_id, 'Попробуйте ввести сообщение еще раз')
-
