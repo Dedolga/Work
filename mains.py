@@ -4,10 +4,10 @@ from random import randrange
 from d_b import *
 from vk_api.longpoll import VkLongPoll, VkEventType
 
-user_token = ''
-comm_token = ''
+user_token = 'vk1.a.Qfppwb3Q_bttT3ADtH7yXL56iNu_1y4Hql6zLaR4-JyBqAZptm20gfD6ikZ1ywa-B11YXtBkA1Lc-8-qH08dneVfYjKKwiSCRKFCpkz4CB8R5UCpdzbJp-1i1ANv77tdATBmbGE442wz2_66gVUW15eN4jRUHxI3JoazX7gpXC6LKBzl_wn9tReMZiA2FzDaZhHVxSB25U1Lye9-D-Iirw'
+comm_token = 'vk1.a.830rM18zA0ACh-nDrntjq-vsZub2CasfPrL-oWCIBjDGeDBLDf0tUlugxOF_wPWFNEdYxdj8NX6R9dqF6h-6kvW61F01SiftnbGBxmTlwBykvr42K_kK7WWjnqofieNCE1DGpqcBLaTpAq5urGkVl3GhHlewqglDvW6wjtvmWw73L9-CoirxdFS9UcPOyU_FjGIpu5rSytX3FDZitUXPUA'
 
-offset = 10
+offset = 0
 line = range(0, 1000)
 
 vk1 = vk_api.VkApi(token=comm_token)
