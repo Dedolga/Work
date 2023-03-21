@@ -7,7 +7,7 @@ from vk_api.longpoll import VkLongPoll, VkEventType
 user_token = ''
 comm_token = ''
 
-offset = 0
+offset = 1
 line = range(0, 1000)
 
 vk1 = vk_api.VkApi(token=comm_token)
@@ -23,27 +23,30 @@ def write_msg(user_id, message):
 
 
 def get_sender_data(user_id):
-    sender_data={}
+    sender_data = {}
     response = vk1.method('users.get', {'access_token': user_token,
                                         'user_id': user_id,
                                         'v': '5.131',
                 'fields': 'first_name, last_name, bdate, sex, city'})
-    if response:
-        for key, value in response[0].items():
-            if key=='city':
-                sender_data[key]=value['id']
-            else:
-                sender_data[key]=value
-        for key, value in sender_data.items():
-            if key == 'bdate':
-                sender_data[key] = datetime.datetime.now().year - int(value[-4:])
-        for key, value in sender_data.items():
-            if key == 'sex':
-                if value == 1:
-                    sender_data[key] = 2
+    try:
+        if response:
+            for key, value in response[0].items():
+                if key=='city':
+                    sender_data[key]=value['id']
                 else:
-                    sender_data[key] = 1
-    return sender_data
+                    sender_data[key]=value
+            for key, value in sender_data.items():
+                if key == 'bdate':
+                    sender_data[key] = datetime.datetime.now().year - int(value[-4:])
+            for key, value in sender_data.items():
+                if key == 'sex':
+                    if value == 1:
+                        sender_data[key] = 2
+                    else:
+                        sender_data[key] = 1
+        return sender_data
+    except KeyError:
+        return None
 
 def get_sender_name(user_id):
     dict = get_sender_data(user_id)
@@ -53,19 +56,9 @@ def get_sender_name(user_id):
             first_name = dict['first_name']
     return first_name
 
-def get_city(user_id):
-    sender_data = get_sender_data(user_id)
-    return sender_data['city']
-
-def get_user_age(user_id):
-    sender_data = get_sender_data(user_id)
-    return sender_data['bdate']
-
-def get_user_sex(user_id):
-    sender_data = get_sender_data(user_id)
-    return sender_data['sex']
 
 def get_add_info(user_id, field):
+    sender_data = get_sender_data(user_id)
     dict_info = {
         'bdate': 'Введите Вашу дату рождения в формате ДД.ММ.ГГГГ',
         'city': 'Введите Ваш город'}
@@ -74,35 +67,42 @@ def get_add_info(user_id, field):
         if event.type == VkEventType.MESSAGE_NEW:
             if event.to_me:
                 if field == 'city':
-                    return get_city(user_id)
+                    return sender_data['city']
                 elif field == 'bdate':
                     if len(event.text.split('.')) != 3:
                         write_msg(user_id, 'Дата рождения не верна!')
                         return False
                     return event.text
 
-
 def find_user(user_id):
+    global user_info_list
+    user_info_list = []
     link='vk.com/id'
+    sender_data = get_sender_data(user_id)
+    user_info=[]
     response = vk2.method('users.search', {'v': 5.131,
-                                           'sex': get_user_sex(user_id),
-            'age_from': get_user_age(user_id)-5,
-            'age_to': get_user_age(user_id)+5,
-            'city': get_city(user_id),
+                                           'sex': sender_data['sex'],
+            'age_from': sender_data['bdate']-5,
+            'age_to': sender_data['bdate']+5,
+            'city': sender_data['city'],
             'fields': 'is_closed, id, first_name, last_name',
-            'has photo': 1,
             'status': 6,
             'count': 500})
+    try:
+       one = response['items']
+    except KeyError:
+        return None
     for one in response['items']:
         if one.get('is_closed') == False:
-            first_name = one.get('first_name')
-            last_name=one.get('last_name')
             vk_id = str(one.get('id'))
-            vk_link = link + str(one.get('id'))
-            insert_userdata(first_name, last_name, vk_id, vk_link)
-        else:
-           continue
-    return f'Поиск окончен'
+            person =[
+            one.get('first_name'),
+            one.get('last_name'),
+            str(one.get('id')),
+            link + str(one.get('id'))]
+            user_info_list.append(person)
+            insert_userdata(vk_id)
+    return user_info_list
 
 def get_photo(user_id):
     responses = vk2.method('photos.get',{'access_token': user_token,
@@ -113,12 +113,15 @@ def get_photo(user_id):
                                       'extended': 1})
     list_p = []
     photo_dict = {}
-    if responses.get('count'):
-        list_p = sorted(responses.get('items'), key=lambda x: x['likes']['count']+ x['comments']['count'], reverse = True)[:3]
-        photo_dict = {'user_id': list_p[0]['owner_id'], 'photo_ids':[]}
-    for p in list_p:
-        photo_dict['photo_ids'].append(p['id'])
-    return photo_dict['photo_ids']
+    try:
+        if responses.get('count'):
+            list_p = sorted(responses.get('items'), key=lambda x: x['likes']['count']+ x['comments']['count'], reverse = True)[:3]
+            photo_dict = {'user_id': list_p[0]['owner_id'], 'photo_ids':[]}
+        for p in list_p:
+            photo_dict['photo_ids'].append(p['id'])
+        return photo_dict['photo_ids']
+    except KeyError:
+        return None
 
 def show_photo(user_id, message, offset):
     photo_list_ids = get_photo(choosen_user_id(offset))
@@ -137,35 +140,43 @@ def show_photo(user_id, message, offset):
                                         'random_id': 0})
     return response
 
-
 def choose_users(user_id, offset):
-    write_msg(user_id, choosen_user(offset))
-    choosen_user_id(offset)
-    insert_processed_users(choosen_user_id(offset), offset)
-    get_photo(choosen_user_id(offset))
-    show_photo(user_id, 'Фото', offset)
+    if choosen_user_id(offset) == None:
+        write_msg(user_id,  f'Анкет больше не осталось, необходим новый поиск ')
+        for event in longpoll.listen():
+            if event.type == VkEventType.MESSAGE_NEW and event.to_me:
+                find_user(user_id)
+                write_msg(event.user_id, f'Жми на кнопку "Еще", чтобы увидеть другие варианты')
+                choose_users(user_id, offset)
+                return
+    else:
+        write_msg(user_id, choosen_user(offset))
+        choosen_user_id(offset)
+        insert_processed_users(choosen_user_id(offset), offset)
+        get_photo(choosen_user_id(offset))
+        show_photo(user_id, 'Фотографии', offset)
+
 
 def choosen_user(offset):
-    tuple_person = select(offset)
-    choosen_list = []
-    for each in tuple_person:
-        choosen_list.append(each)
-    return f'ссылка на профиль - {choosen_list[3]}, {choosen_list[0]} {choosen_list[1]}'
+    person_id = choosen_user_id(offset)
+    for i in user_info_list:
+        if person_id == i[2]:
+            return f'ссылка на профиль - {i[3]}, {i[0]} {i[1]}'
+    return f'ссылка на профиль - {i[3]}, {i[0]} {i[1]}'
+
 
 def choosen_user_id(offset):
     tuple_person = select(offset)
     choosen_user_list = []
     for each in tuple_person:
         choosen_user_list.append(each)
-    return str(choosen_user_list[2])
+        for i in choosen_user_list:
+            return str(i)
 
 def main():
     write_msg()
     get_sender_data()
     get_sender_name()
-    get_user_age()
-    get_user_sex()
-    get_city()
     get_add_info()
     find_user()
     get_photo()
