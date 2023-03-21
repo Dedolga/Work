@@ -1,8 +1,5 @@
 from mains import *
-from d_b import *
 import json
-
-
 
 def create_button(text, color):
     return {"action": {"type": "text", "label": f"{text}"}, "color": f"{color}"}
@@ -27,7 +24,7 @@ for event in longpoll.listen():
         msg = event.text.lower()
         searcher_data(user_id, msg.lower())
         if request == 'поиск пары':
-            creating_database()
+            create_tables()
             write_msg(user_id, f'Привет, {get_sender_name(user_id)}')
             find_user(user_id)
             write_msg(event.user_id, f'Жми на кнопку "Еще", чтобы увидеть другие варианты')
