@@ -125,7 +125,7 @@ def get_photo(user_id):
 
 def show_photo(user_id, message):
     photo_list_ids = get_photo(choosen_user_id())
-    if len(photo_list_ids) == None:
+    if len(photo_list_ids) == 0:
         attachment = 0
     if len(photo_list_ids) == 1:
         attachment = f'photo{choosen_user_id()}_{photo_list_ids[0]}'
