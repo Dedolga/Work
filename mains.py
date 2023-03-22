@@ -7,7 +7,6 @@ from vk_api.longpoll import VkLongPoll, VkEventType
 user_token = ''
 comm_token = ''
 
-offset = 1
 line = range(0, 1000)
 
 vk1 = vk_api.VkApi(token=comm_token)
@@ -86,6 +85,7 @@ def find_user(user_id):
             'age_to': sender_data['bdate']+5,
             'city': sender_data['city'],
             'fields': 'is_closed, id, first_name, last_name',
+            'has photo': 1,
             'status': 6,
             'count': 500})
     try:
@@ -123,16 +123,16 @@ def get_photo(user_id):
     except KeyError:
         return None
 
-def show_photo(user_id, message, offset):
-    photo_list_ids = get_photo(choosen_user_id(offset))
-    if len(photo_list_ids) == 0:
+def show_photo(user_id, message):
+    photo_list_ids = get_photo(choosen_user_id())
+    if len(photo_list_ids) == None:
         attachment = 0
     if len(photo_list_ids) == 1:
-        attachment = f'photo{choosen_user_id(offset)}_{photo_list_ids[0]}'
+        attachment = f'photo{choosen_user_id()}_{photo_list_ids[0]}'
     if len(photo_list_ids) == 2:
-        attachment = f'photo{choosen_user_id(offset)}_{photo_list_ids[0]},photo{choosen_user_id(offset)}_{photo_list_ids[1]}'
+        attachment = f'photo{choosen_user_id()}_{photo_list_ids[0]},photo{choosen_user_id()}_{photo_list_ids[1]}'
     if len(photo_list_ids) >= 3:
-        attachment = f'photo{choosen_user_id(offset)}_{photo_list_ids[0]},photo{choosen_user_id(offset)}_{photo_list_ids[1]},photo{choosen_user_id(offset)}_{photo_list_ids[2]}'
+        attachment = f'photo{choosen_user_id()}_{photo_list_ids[0]},photo{choosen_user_id()}_{photo_list_ids[1]},photo{choosen_user_id()}_{photo_list_ids[2]}'
     response = vk1.method('messages.send', {'user_id': user_id,
                                         'access_token': user_token,
                                         'attachment': attachment,
@@ -140,33 +140,33 @@ def show_photo(user_id, message, offset):
                                         'random_id': 0})
     return response
 
-def choose_users(user_id, offset):
-    if choosen_user_id(offset) == None:
+def choose_users(user_id):
+    if choosen_user_id() == None:
         write_msg(user_id,  f'Анкет больше не осталось, необходим новый поиск ')
         for event in longpoll.listen():
             if event.type == VkEventType.MESSAGE_NEW and event.to_me:
                 find_user(user_id)
                 write_msg(event.user_id, f'Жми на кнопку "Еще", чтобы увидеть другие варианты')
-                choose_users(user_id, offset)
+                choose_users(user_id)
                 return
     else:
-        write_msg(user_id, choosen_user(offset))
-        choosen_user_id(offset)
-        insert_processed_users(choosen_user_id(offset), offset)
-        get_photo(choosen_user_id(offset))
-        show_photo(user_id, 'Фотографии', offset)
+        write_msg(user_id, choosen_user())
+        choosen_user_id()
+        get_photo(choosen_user_id())
+        show_photo(user_id, 'Фотографии')
 
 
-def choosen_user(offset):
-    person_id = choosen_user_id(offset)
+def choosen_user():
+    insert_processed_users(choosen_user_id())
+    person_id = choosen_user_id()
     for i in user_info_list:
         if person_id == i[2]:
             return f'ссылка на профиль - {i[3]}, {i[0]} {i[1]}'
     return f'ссылка на профиль - {i[3]}, {i[0]} {i[1]}'
 
 
-def choosen_user_id(offset):
-    tuple_person = select(offset)
+def choosen_user_id():
+    tuple_person = select()
     choosen_user_list = []
     for each in tuple_person:
         choosen_user_list.append(each)
@@ -184,3 +184,4 @@ def main():
     choose_users()
     choosen_user()
     choosen_user_id()
+
