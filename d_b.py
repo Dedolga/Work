@@ -1,6 +1,6 @@
 import psycopg2
 
-conn = psycopg2.connect(database='', user='postgres', password='')
+conn = psycopg2.connect(database='data_bd', user='postgres', password='90Olgabase23')
 conn.autocommit = True
 
 def create_table_userdata():
@@ -26,21 +26,20 @@ def insert_userdata(vk_id):
           )
     print('Данные в таблицу пользователей успешно внесены')
 
-def insert_processed_users(vk_id, offset):
+def insert_processed_users(vk_id):
     with conn.cursor() as cur:
         cur.execute(
             f"""INSERT INTO processed_users (vk_id)
-           VALUES ('{vk_id}') OFFSET '{offset}'"""
+           VALUES ('{vk_id}')"""
         )
     print('Данные в таблицу обработанных пользователей успешно внесены')
 
-def select(offset):
+def select():
     with conn.cursor() as cur:
         cur.execute(f"""SELECT u.vk_id, pu.vk_id
                         FROM userdata AS u LEFT JOIN processed_users AS pu 
                         ON u.vk_id = pu.vk_id
-                        WHERE pu.vk_id IS NULL
-                        OFFSET '{offset}';""")
+                        WHERE pu.vk_id IS NULL;""")
         return cur.fetchone()
 
 
