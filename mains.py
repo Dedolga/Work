@@ -125,13 +125,13 @@ def get_photo(user_id):
 
 def show_photo(user_id, message):
     photo_list_ids = get_photo(choosen_user_id())
-    if len(photo_list_ids) == 0:
-        attachment = 0
-    if len(photo_list_ids) == 1:
+    if photo_list_ids is None:
+        attachment = f'У пользователя нет фотографий.'
+    elif len(photo_list_ids) == 1:
         attachment = f'photo{choosen_user_id()}_{photo_list_ids[0]}'
-    if len(photo_list_ids) == 2:
+    elif len(photo_list_ids) == 2:
         attachment = f'photo{choosen_user_id()}_{photo_list_ids[0]},photo{choosen_user_id()}_{photo_list_ids[1]}'
-    if len(photo_list_ids) >= 3:
+    elif len(photo_list_ids) >= 3:
         attachment = f'photo{choosen_user_id()}_{photo_list_ids[0]},photo{choosen_user_id()}_{photo_list_ids[1]},photo{choosen_user_id()}_{photo_list_ids[2]}'
     response = vk1.method('messages.send', {'user_id': user_id,
                                         'access_token': user_token,
@@ -184,4 +184,3 @@ def main():
     choose_users()
     choosen_user()
     choosen_user_id()
-
