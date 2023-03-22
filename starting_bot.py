@@ -28,13 +28,11 @@ for event in longpoll.listen():
             write_msg(user_id, f'Привет, {get_sender_name(user_id)}')
             find_user(user_id)
             write_msg(event.user_id, f'Жми на кнопку "Еще", чтобы увидеть другие варианты')
-            choose_users(user_id, offset)
+            choose_users(user_id)
 
         elif request == 'еще':
-            for i in line:
-                offset += 1
-                choose_users(user_id, offset)
-                break
+            choose_users(user_id)
+
 
         else:
             write_msg(event.user_id, 'Попробуйте ввести сообщение еще раз')
