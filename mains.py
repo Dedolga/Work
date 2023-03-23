@@ -104,6 +104,38 @@ def find_user(user_id):
             insert_userdata(vk_id)
     return user_info_list
 
+def find_user_repeat(user_id):
+    global user_info_list
+    user_info_list = []
+    link='vk.com/id'
+    sender_data = get_sender_data(user_id)
+    user_info=[]
+    response = vk2.method('users.search', {'v': 5.131,
+                                           'sex': sender_data['sex'],
+            'age_from': sender_data['bdate']-5,
+            'age_to': sender_data['bdate']+5,
+            'city': sender_data['city'],
+            'fields': 'is_closed, id, first_name, last_name',
+            'has photo': 1,
+            'status': 6,
+            'count': 1000})
+    try:
+       one = response['items']
+    except KeyError:
+        return None
+    for one in response['items']:
+        if one.get('is_closed') == False:
+            vk_id = str(one.get('id'))
+            person =[
+            one.get('first_name'),
+            one.get('last_name'),
+            str(one.get('id')),
+            link + str(one.get('id'))]
+            user_info_list.append(person)
+            insert_userdata(vk_id)
+    return user_info_list
+
+
 def get_photo(user_id):
     responses = vk2.method('photos.get',{'access_token': user_token,
                                       'v': '5.131',
@@ -145,9 +177,13 @@ def choose_users(user_id):
         write_msg(user_id,  f'Анкет больше не осталось, необходим новый поиск ')
         for event in longpoll.listen():
             if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-                find_user(user_id)
+                find_user_repeat(user_id)
                 write_msg(event.user_id, f'Жми на кнопку "Еще", чтобы увидеть другие варианты')
                 choose_users(user_id)
+                write_msg(user_id, choosen_user())
+                choosen_user_id()
+                get_photo(choosen_user_id())
+                show_photo(user_id, 'Фотографии')
                 return
     else:
         write_msg(user_id, choosen_user())
